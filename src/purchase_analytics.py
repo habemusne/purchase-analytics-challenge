@@ -31,16 +31,26 @@ def _iter_read_csv(csv_path, num_cols, row_types):
         for i, row in enumerate(reader):
             # Skip the row if it has unexpected row length
             if len(row) != num_cols:
-                logger.warning('Unexpected row length at row {} of {}'.format(i, csv_path))
+                logger.warning('Unexpected row length at row {}'.format(i))
                 continue
 
             # skip the row if it has unexpected data types
-            try:
-                row = [row_types[i](cell) for i, cell in enumerate(row)]
-            except ValueError:
-                logger.warning('Unexpected row format at row {} of {}'.format(i, csv_path))
+            good_format = True
+            row = [cell.strip() for cell in row]  # avoid whitespaces
+            for j, cell in enumerate(row):
+                #TODO other data types (bool, float, etc) need further support
+                if row_types[j] not in [int, str]:
+                    raise NotImplementedError('cleaning data type {} is not implemented: row {}'.\
+                        format(row_types[j].__name__, i))
+
+                # if cell needs to be string, go ahead. if needs to be int, check if it's number
+                good_format &= (row_types[j] == str) or (row_types[j] == int and cell.isdigit())
+
+            if not good_format:
+                logger.warning('Unexpected row format at row {}'.format(i))
                 continue
 
+            row = [row_types[j](cell) for j, cell in enumerate(row)]
             yield row
 
 
