@@ -15,7 +15,7 @@ logger = logging.getLogger(__file__)
 
 def _iter_read_csv(csv_path, row_types):
     """
-    Iterate over a csv and yield every row unless it's expected.
+    Iterate over a csv and yield every row unless it's unexpected.
 
     Args:
         path_prod: path to the product csv (including file name)
