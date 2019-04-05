@@ -5,8 +5,6 @@ from os.path import exists, isdir
 from collections import defaultdict, namedtuple
 
 # Global variables specifying the format of the input and output csvs
-NUM_COLS_ORDER_PROD_CSV = 4
-NUM_COLS_PROD_CSV = 4
 ROW_TYPES_ORDER_PROD_CSV = [int, int, int, int]
 ROW_TYPES_PROD_CSV = [int, str, int, int]
 HEADER_REPORT_CSV = ['department_id', 'number_of_orders', 'number_of_first_orders', 'percentage']
@@ -15,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__file__)
 
 
-def _iter_read_csv(csv_path, num_cols, row_types):
+def _iter_read_csv(csv_path, row_types):
     """
     Iterate over a csv and yield every row unless it's expected.
 
@@ -30,7 +28,7 @@ def _iter_read_csv(csv_path, num_cols, row_types):
         reader.__next__()
         for i, row in enumerate(reader):
             # Skip the row if it has unexpected row length
-            if len(row) != num_cols:
+            if len(row) != len(row_types):
                 logger.warning('Unexpected row length at row {}'.format(i))
                 continue
 
@@ -79,14 +77,14 @@ def analyze(path_order_prod, path_prod, path_report):
     # Build a mapping from product id to department id
     logger.info('Generating data from {}...'.format(path_prod.split('/')[-1]))
     prodid_to_deptid = {}
-    iterator = _iter_read_csv(path_prod, NUM_COLS_PROD_CSV, ROW_TYPES_PROD_CSV)
+    iterator = _iter_read_csv(path_prod, ROW_TYPES_PROD_CSV)
     for row in iterator:
         prodid_to_deptid[row[0]] = row[3]
 
     # Read over order-product csv to count necessary statistics
     logger.info('Generating data from {}...'.format(path_order_prod.split('/')[-1]))
     deptid_stat = defaultdict(lambda: [0, 0])
-    iterator = _iter_read_csv(path_order_prod, NUM_COLS_ORDER_PROD_CSV, ROW_TYPES_ORDER_PROD_CSV)
+    iterator = _iter_read_csv(path_order_prod, ROW_TYPES_ORDER_PROD_CSV)
     for i, row in enumerate(iterator):
         # if reordered flag is not 0 or 1, skip
         if row[3] not in [0, 1]:
